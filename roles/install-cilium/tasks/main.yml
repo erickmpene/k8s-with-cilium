@@ -1,0 +1,14 @@
+# roles/install-cilium/tasks/main.yml
+- name: Install Cilium CLI
+  get_url:
+    url: https://github.com/cilium/cilium-cli/releases/latest/download/cilium-linux-amd64
+    dest: /usr/local/bin/cilium
+    mode: '0755'
+
+- name: Install Cilium CNI
+  shell: |
+    export KUBECONFIG=/etc/kubernetes/admin.conf
+    cilium install --version 1.15.3
+    cilium status --wait
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf

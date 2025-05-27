@@ -1,0 +1,26 @@
+# roles/kubeadm-join/tasks/main.yml
+- name: Copy join command script from master
+  fetch:
+    src: /tmp/kubeadm_join.sh
+    dest: /tmp/kubeadm_join.sh
+    flat: yes
+  delegate_to: master
+  run_once: true
+
+- name: Run join script
+  shell: bash /tmp/kubeadm_join.sh
+  args:
+    creates: /etc/kubernetes/kubelet.conf
+
+- name: Copy join command script from master
+  fetch:
+    src: /tmp/kubeadm_join.sh
+    dest: /tmp/kubeadm_join.sh
+    flat: yes
+  delegate_to: master
+  run_once: true
+
+- name: Run join script
+  shell: bash /tmp/kubeadm_join.sh
+  args:
+    creates: /etc/kubernetes/kubelet.conf

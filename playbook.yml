@@ -1,0 +1,23 @@
+- name: Prepare nodes
+  hosts: k8s_cluster
+  become: true
+  roles:
+    - common
+
+- name: Initialize control plane
+  hosts: masters
+  become: true
+  roles:
+    - kubeadm-init
+
+- name: Join workers to cluster
+  hosts: workers
+  become: true
+  roles:
+    - kubeadm-join
+
+- name: Install Cilium
+  hosts: masters
+  become: true
+  roles:
+    - install-cilium

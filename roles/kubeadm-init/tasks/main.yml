@@ -1,0 +1,26 @@
+# roles/kubeadm-init/tasks/main.yml
+- name: Install kubeadm, kubelet, kubectl
+  include_tasks: ../common/tasks/kubernetes-tools.yml
+
+- name: Initialize Kubernetes master
+  shell: |
+    kubeadm init --pod-network-cidr=10.0.0.0/16 --apiserver-advertise-address={{ ansible_host }} --ignore-preflight-errors=all
+  args:
+    creates: /etc/kubernetes/admin.conf
+
+- name: Copy kubeconfig to ~/.kube/config
+  copy:
+    remote_src: true
+    src: /etc/kubernetes/admin.conf
+    dest: /home/{{ ansible_user }}/.kube/config
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: 0600
+
+- name: Generate kubeadm join script
+  shell: |
+    kubeadm token create --print-join-command --ttl 24h > /tmp/kubeadm_join.sh
+    chmod +x /tmp/kubeadm_join.sh
+  args:
+    creates: /tmp/kubeadm_join.sh
+
