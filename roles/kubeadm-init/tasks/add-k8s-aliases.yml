@@ -1,0 +1,33 @@
+- name: Append kubectl aliases to .bashrc if not already present
+  blockinfile:
+    path: "$HOME/.bashrc"
+    marker: "# {mark} ANSIBLE K8S ALIASES"
+    create: true
+    block: |
+      alias k='kubectl'
+      alias kcc='kubectl config current-context'
+      alias kg='kubectl get'
+      alias kga='kubectl get all --all-namespaces'
+      alias kgp='kubectl get pods -o wide'
+      alias kgs='kubectl get services'
+      alias ksgp='kubectl get pods -n kube-system'
+      alias kuc='kubectl config use-context'
+      alias kgc='ctr -n k8s.io containers list'
+      alias kgi='kubectl get ingress -o wide'
+      alias kgd='kubectl get deployment -o wide'
+      alias ka='kubectl apply -f'
+      alias kgn='kubectl get node -o wide'
+      alias w1='kubectl describe nodes worker1'
+      alias w2='kubectl describe nodes worker2'
+      alias w3='kubectl describe nodes worker3'
+      alias w4='kubectl describe nodes worker4'
+      alias kapi='kubectl api-resources -v 6 -o wide'
+      alias kl='kubectl logs'
+      alias kf='kubectl port-forward'
+      alias kd='kubectl describe'
+      alias KD='kubectl delete'
+
+- name: Source .bashrc for user
+  shell: "bash -c 'source $HOME/.bashrc'"
+  args:
+    executable: /bin/bash

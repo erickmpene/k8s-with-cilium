@@ -1,6 +1,10 @@
 # roles/kubeadm-init/tasks/main.yml
+
 - name: Install kubeadm, kubelet, kubectl
   include_tasks: ../common/tasks/kubernetes-tools.yml
+
+- name: Add Kubernetes aliases to user 
+  include_tasks: ./add-k8s-aliases.yml
 
 - name: Initialize Kubernetes master
   shell: |
@@ -8,17 +12,17 @@
   args:
     creates: /etc/kubernetes/admin.conf
 
-- name: Ensure ~/.kube exist
+- name: Ensure $HOME/.kube exist
   file:
-    path: ~/.kube
+    path: $HOME/.kube
     state: directory
     mode: '0755'
 
-- name: Copy kubeconfig to ~/.kube/config
+- name: Copy kubeconfig to $HOME/.kube/config
   copy:
     remote_src: true
     src: /etc/kubernetes/admin.conf
-    dest: /{{ ansible_user }}/.kube/config
+    dest: $HOME/.kube/config
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"
     mode: 0600

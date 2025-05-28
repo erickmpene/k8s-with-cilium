@@ -1,7 +1,7 @@
 - name: Retrieve latest stable version of cilium CLI
   uri:
     url: https://raw.githubusercontent.com/cilium/cilium-cli/main/stable.txt
-    return_content: yes
+    return_content: true
   register: cilium_version
 
 - name: Clean cilium version string
@@ -31,7 +31,7 @@
   unarchive:
     src: "/tmp/cilium-linux-{{ cilium_arch }}.tar.gz"
     dest: /usr/local/bin/
-    remote_src: yes
+    remote_src: true
     extra_opts: [--strip-components=0]
     creates: /usr/local/bin/cilium
 
