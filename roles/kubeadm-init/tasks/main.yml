@@ -4,18 +4,36 @@
 
 - name: Initialize Kubernetes master
   shell: |
-    kubeadm init --pod-network-cidr=10.0.0.0/16 --apiserver-advertise-address={{ ansible_host }} --ignore-preflight-errors=all
+    kubeadm init --pod-network-cidr=10.244.0.0/16 --apiserver-advertise-address={{ ansible_host }} --ignore-preflight-errors=all
   args:
     creates: /etc/kubernetes/admin.conf
+
+- name: Ensure ~/.kube exist
+  file:
+    path: ~/.kube
+    state: directory
+    mode: '0755'
 
 - name: Copy kubeconfig to ~/.kube/config
   copy:
     remote_src: true
     src: /etc/kubernetes/admin.conf
-    dest: /home/{{ ansible_user }}/.kube/config
+    dest: /{{ ansible_user }}/.kube/config
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"
     mode: 0600
+
+- name: Restart containerd
+  ansible.builtin.systemd:
+    name: containerd
+    state: restarted
+    enabled: true
+
+- name: Restart kubelet
+  ansible.builtin.systemd:
+    name: kubelet
+    state: restarted
+    enabled: true
 
 - name: Generate kubeadm join script
   shell: |
@@ -24,3 +42,7 @@
   args:
     creates: /tmp/kubeadm_join.sh
 
+- name: Read kubeadm join script content into variable
+  slurp:
+    src: /tmp/kubeadm_join.sh
+  register: join_script

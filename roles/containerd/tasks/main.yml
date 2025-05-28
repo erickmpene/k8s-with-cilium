@@ -1,0 +1,40 @@
+- name: Installer containerd
+  apt:
+    name: containerd
+    state: present
+    update_cache: true
+
+- name: Créer le dossier /etc/containerd
+  file:
+    path: /etc/containerd
+    state: directory
+    mode: '0755'
+
+- name: Générer la configuration par défaut de containerd
+  shell: containerd config default > /etc/containerd/config.toml
+  args:
+    creates: /etc/containerd/config.toml
+
+- name: Activer SystemdCgroup dans /etc/containerd/config.toml
+  replace:
+    path: /etc/containerd/config.toml
+    regexp: '^(\s*)SystemdCgroup = false'
+    replace: '\1SystemdCgroup = true'
+
+- name: Redémarrer containerd
+  systemd:
+    name: containerd
+    state: restarted
+    enabled: true
+
+- name: Vérifier si ufw est installé
+  stat:
+    path: /lib/systemd/system/ufw.service
+  register: ufw_status
+
+- name: Désactiver UFW si présent
+  systemd:
+    name: ufw
+    state: stopped
+    enabled: no
+  when: ufw_status.stat.exists

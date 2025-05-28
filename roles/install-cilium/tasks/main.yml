@@ -1,14 +1,62 @@
-# roles/install-cilium/tasks/main.yml
-- name: Install Cilium CLI
-  get_url:
-    url: https://github.com/cilium/cilium-cli/releases/latest/download/cilium-linux-amd64
-    dest: /usr/local/bin/cilium
-    mode: '0755'
+- name: Retrieve latest stable version of cilium CLI
+  uri:
+    url: https://raw.githubusercontent.com/cilium/cilium-cli/main/stable.txt
+    return_content: yes
+  register: cilium_version
 
-- name: Install Cilium CNI
+- name: Clean cilium version string
+  set_fact:
+    cilium_version_clean: "{{ cilium_version.content | trim }}"
+
+- name: Set CLI architecture based on machine architecture
+  set_fact:
+    cilium_arch: "{{ 'arm64' if ansible_architecture == 'aarch64' else 'amd64' }}"
+
+- name: Download cilium CLI tar.gz and sha256sum
+  get_url:
+    url: "https://github.com/cilium/cilium-cli/releases/download/{{ cilium_version_clean }}/cilium-linux-{{ cilium_arch }}.tar.gz{{ item }}"
+    dest: "/tmp/cilium-linux-{{ cilium_arch }}.tar.gz{{ item }}"
+    mode: '0644'
+  loop:
+    - ""
+    - ".sha256sum"
+
+- name: Verify the sha256 checksum
   shell: |
-    export KUBECONFIG=/etc/kubernetes/admin.conf
+    sha256sum --check cilium-linux-{{ cilium_arch }}.tar.gz.sha256sum
+  args:
+    chdir: /tmp
+
+- name: Extract cilium binary to /usr/local/bin
+  unarchive:
+    src: "/tmp/cilium-linux-{{ cilium_arch }}.tar.gz"
+    dest: /usr/local/bin/
+    remote_src: yes
+    extra_opts: [--strip-components=0]
+    creates: /usr/local/bin/cilium
+
+- name: Remove cilium archive and checksum file
+  file:
+    path: "/tmp/cilium-linux-{{ cilium_arch }}.tar.gz{{ item }}"
+    state: absent
+  loop:
+    - ""
+    - ".sha256sum"
+
+- name: Set KUBECONFIG path
+  set_fact:
+    kubeconfig_path: /etc/kubernetes/admin.conf
+
+- name: Install Cilium using cilium CLI
+  shell: |
+    export KUBECONFIG={{ kubeconfig_path }}
     cilium install --version 1.15.3
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+
+- name: Wait until Cilium is ready
+  shell: |
+    export KUBECONFIG={{ kubeconfig_path }}
     cilium status --wait
   environment:
-    KUBECONFIG: /etc/kubernetes/admin.conf
+    KUBECONFIG: "{{ kubeconfig_path }}"
