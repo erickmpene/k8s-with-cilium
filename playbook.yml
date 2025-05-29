@@ -4,12 +4,6 @@
   roles:
     - common
 
-- name: Installer containerd
-  hosts: k8s_cluster
-  become: true
-  roles:
-    - containerd
-
 - name: Initialize control plane
   hosts: masters
   become: true
@@ -27,3 +21,5 @@
   become: true
   roles:
     - install-cilium
+
+

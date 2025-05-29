@@ -1,33 +1,78 @@
-- name: Ensure APT keyring directory exists
-  file:
-    path: /etc/apt/keyrings
-    state: directory
+# - name: Ensure APT keyring directory exists
+#   file:
+#     path: /etc/apt/keyrings
+#     state: directory
+#     mode: '0755'
+
+# - name: Download Kubernetes GPG key and convert to GPG keyring
+#   shell: |
+#     curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.31/deb/Release.key | \
+#     gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+#   args:
+#     creates: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+
+# - name: Add Kubernetes APT repository
+#   copy:
+#     dest: /etc/apt/sources.list.d/kubernetes.list
+#     content: |
+#       deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.31/deb/ /
+
+# - name: Update APT cache
+#   apt:
+#     update_cache: yes
+
+# - name: Install Kubernetes tools
+#   apt:
+#     name:
+#       - kubelet
+#       - kubeadm
+#       - kubectl
+#     state: present
+
+- name: Check if kubeadm is installed
+  command: which kubeadm
+  register: kubeadm_check
+  ignore_errors: true
+
+- name: Check if kubelet is installed
+  command: which kubelet
+  register: kubelet_check
+  ignore_errors: true
+
+- name: Check if kubectl is installed
+  command: which kubectl
+  register: kubectl_check
+  ignore_errors: true
+
+- name: Copy install.sh to remote host
+  copy:
+    src: ../files/install.sh
+    dest: /tmp/install.sh
     mode: '0755'
 
-- name: Download Kubernetes GPG key and convert to GPG keyring
-  shell: |
-    curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.31/deb/Release.key | \
-    gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
-  args:
-    creates: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+- name: Execute the install.sh script
+  shell: /tmp/install.sh
+  when: kubeadm_check.rc != 0 or kubelet_check.rc != 0 or kubectl_check.rc != 0
+  register: script_output
+  ignore_errors: false
 
-- name: Add Kubernetes APT repository
-  copy:
-    dest: /etc/apt/sources.list.d/kubernetes.list
-    content: |
-      deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.31/deb/ /
+- name: Print script stdout
+  debug:
+    var: script_output.stdout_lines
 
-- name: Update APT cache
-  apt:
-    update_cache: yes
+- name: Print script stderr
+  debug:
+    var: script_output.stderr_lines
 
-- name: Install Kubernetes tools
-  apt:
-    name:
-      - kubelet
-      - kubeadm
-      - kubectl
-    state: present
+- name: Fail with error if script fails
+  fail:
+    msg: "Script failed with error: {{ script_output.stderr }}"
+  when: script_output.rc != 0
+
+- name: Remove the script after execution
+  file:
+    path: /tmp/install.sh
+    state: absent
 
 - name: Hold kubelet
   command: apt-mark hold kubelet

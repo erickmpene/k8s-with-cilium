@@ -15,29 +15,7 @@
       - gnupg
       - software-properties-common
       - htop
+      - sudo
     update_cache: true
-
-- name: Disable swap
-  shell: |
-    swapoff -a
-    sed -i '/swap/d' /etc/fstab
-
-- name: Load kernel modules
-  modprobe:
-    name: "{{ item }}"
-  loop:
-    - overlay
-    - br_netfilter
-
-- name: Set sysctl params
-  sysctl:
-    name: "{{ item.key }}"
-    value: "{{ item.value }}"
-    state: present
-    reload: yes
-  loop:
-    - { key: net.bridge.bridge-nf-call-iptables, value: 1 }
-    - { key: net.ipv4.ip_forward, value: 1 }
-    - { key: net.bridge.bridge-nf-call-ip6tables, value: 1 }
 
 

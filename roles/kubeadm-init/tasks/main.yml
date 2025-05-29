@@ -6,11 +6,40 @@
 - name: Add Kubernetes aliases to user 
   include_tasks: ./add-k8s-aliases.yml
 
-- name: Initialize Kubernetes master
-  shell: |
-    kubeadm init --pod-network-cidr=10.244.0.0/16 --apiserver-advertise-address={{ ansible_host }} --ignore-preflight-errors=all
-  args:
-    creates: /etc/kubernetes/admin.conf
+- name: Copy init.sh to remote host
+  copy:
+    src: init.sh
+    dest: /tmp/init.sh
+    mode: '0755'
+
+- name: Execute the init.sh script
+  shell: /tmp/init.sh
+  register: script_output
+  ignore_errors: false
+
+- name: Print script stdout
+  debug:
+    var: script_output.stdout_lines
+
+- name: Print script stderr
+  debug:
+    var: script_output.stderr_lines
+
+- name: Fail with error if script fails
+  fail:
+    msg: "Script failed with error: {{ script_output.stderr }}"
+  when: script_output.rc != 0
+
+- name: Remove the script after execution
+  file:
+    path: /tmp/init.sh
+    state: absent
+
+# - name: Initialize Kubernetes master
+#   shell: |
+#     kubeadm init --pod-network-cidr=10.244.0.0/16 --apiserver-advertise-address={{ ansible_host }} --ignore-preflight-errors=all
+#   args:
+#     creates: /etc/kubernetes/admin.conf
 
 - name: Ensure $HOME/.kube exist
   file:
