@@ -60,3 +60,34 @@
     cilium status --wait
   environment:
     KUBECONFIG: "{{ kubeconfig_path }}"
+
+- name: Enable Hubble with Relay and UI
+  shell: |
+    cilium hubble enable --ui
+  args:
+    executable: /bin/bash
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  register: hubble_enable
+  changed_when: "'already enabled' not in hubble_enable.stdout"
+
+- name: Verify Hubble Relay and UI deployment
+  shell: |
+    cilium status --verbose
+  args:
+    executable: /bin/bash
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  register: hubble_status
+
+- name: Debug hubble status
+  debug:
+    var: hubble_status.stdout_lines
+
+- name: Expose Hubble UI as NodePort
+  shell: |
+    kubectl -n kube-system patch svc hubble-ui -p '{"spec": {"type": "NodePort"}}'
+  args:
+    executable: /bin/bash
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf

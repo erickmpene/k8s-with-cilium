@@ -13,13 +13,23 @@ To ensure a smooth and stable deployment of the Kubernetes cluster, please ensur
      ```
      inventory/hosts.ini
      ```
-
 3. **Container Runtime**:
    - The cluster uses **containerd** as the container runtime.
    - It is installed and configured with `SystemdCgroup = true`.
 
 4. **CNI Plugin**:
    - The cluster uses **Cilium** as the CNI for networking, using the official Cilium CLI (`cilium install`) without Helm.
+   - Hubble Observability Layer Enabled. As part of the Cilium installation, this setup also enables **Hubble**, Cilium's built-in observability and visibility layer.
+   ##### Cilium Features Enabled:
+   - **Hubble Relay**: A gRPC service that aggregates observability data from all Cilium agents across the cluster.
+   - **Hubble UI**: A web-based interface to visualize real-time network traffic, L3/L4/L7 flows, policy decisions, and service dependencies.
+   ##### Activation:
+   The playbook automatically runs:
+
+   ```bash
+   cilium hubble enable --ui
+   ```
+
 
 5. **Deployment Strategy**:
    - Although Ansible is used to orchestrate tasks across the nodes (file transfer, condition checks, etc.), the critical components of the Kubernetes setup (such as installing kubeadm/kubelet/kubectl or initializing the cluster) are executed using **Bash scripts**.
