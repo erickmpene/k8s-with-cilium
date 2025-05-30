@@ -54,3 +54,8 @@ Make sure your `hosts.ini` is correctly populated, then run the main playbook:
 ansible-playbook -i inventory/hosts.ini playbook.yml
 ```
 
+## Inspecting a wide variety of Cilium network traffic 
+```bash
+while true; do cilium connectivity test; done
+```
+**To see the traffic in Hubble, open http://localhost:12000/cilium-test in your browser.**
