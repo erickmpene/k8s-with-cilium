@@ -1,7 +1,7 @@
 ## CNI CILIUM
 ## Kubernetes Cluster Provisioning with Ansible and Bash Scripts
 
-## 📌 Requirements
+## Requirements
 
 To ensure a smooth and stable deployment of the Kubernetes cluster, please ensure the following prerequisites are met:
 
@@ -39,14 +39,14 @@ To ensure a smooth and stable deployment of the Kubernetes cluster, please ensur
 
 ---
 
-## 🛠️ Scripts Overview
+## Scripts Overview
 
 - `install.sh`: Installs `kubeadm`, `kubelet`, and `kubectl` if not already present.
 - `init.sh`: Initializes the Kubernetes master node if the cluster is not already initialized.
 
 ---
 
-## 🚀 Usage
+## Usage
 
 Make sure your `hosts.ini` is correctly populated, then run the main playbook:
 
@@ -81,7 +81,7 @@ while true; do cilium connectivity test; done
 
 ---
 
-## 🏁 Recommendation
+## Recommendation
 
 - **Choose Cilium** if:
   - You want deep observability (L7 visibility, auditing)
