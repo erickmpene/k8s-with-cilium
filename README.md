@@ -59,3 +59,38 @@ ansible-playbook -i inventory/hosts.ini playbook.yml
 while true; do cilium connectivity test; done
 ```
 **To see the traffic in Hubble, open http://localhost:12000/cilium-test in your browser.**
+
+# Cilium vs Calico – Comparison for Production Kubernetes Environments
+
+| Feature                            |  **Cilium**                                                 |  **Calico**                                               |
+|------------------------------------|----------------------------------------------------------------|--------------------------------------------------------------|
+| **Dataplane**                      | Native eBPF                                                    | iptables (default) / eBPF (optional)                        |
+| **Network Performance**            | Excellent (kernel bypass via eBPF)                             | Good (iptables-based)                                       |
+| **L7 Support (HTTP, gRPC, Kafka)** | ✅ Yes (natively via Hubble)                                   | ❌ No                                                       |
+| **Pod-to-Pod mTLS**                | ✅ Yes (built-in, without service mesh)                        | ❌ No (requires Istio/Linkerd)                             |
+| **Built-in Observability**         | ✅ Yes (Hubble CLI + UI)                                       | ❌ No (external integration required, e.g., Prometheus)     |
+| **DNS-aware Policies**            | ✅ Yes                                                         | 🔶 Limited                                                  |
+| **UI Availability**                | ✅ Hubble UI                                                   | ❌ None                                                     |
+| **WireGuard Encryption**           | ✅ Built-in during installation                                | ✅ Available (manual setup more complex)                   |
+| **Multi-cluster Support**          | ✅ Yes (ClusterMesh with identity-aware routing)               | 🔶 Experimental                                             |
+| **IPv6 Support**                   | ✅ Yes                                                         | ✅ Yes                                                      |
+| **Installation Complexity**        | 🔶 Medium (via CLI or Helm, with CRDs & Hubble)                | ✅ Low (DaemonSet only)                                     |
+| **Community & Support**            | ✅ Very active (Isovalent, CNCF, supported by AWS, GKE, etc.)  | ✅ Very active (Tigera, CNCF)                               |
+| **Production Maturity**           | 🔶 Newer but widely adopted (Meta, Adobe, Google, etc.)         | ✅ Highly mature and battle-tested                         |
+| **Best Use Cases**                 | Cloud-native apps, DevSecOps, visibility, advanced security    | Simplicity, compatibility, minimal maintenance              |
+
+---
+
+## 🏁 Recommendation
+
+- **Choose Cilium** if:
+  - You want deep observability (L7 visibility, auditing)
+  - You need encryption (WireGuard), service mesh-lite, or gRPC/Kafka-aware policies
+  - You're running a modern cloud-native stack (AWS, GKE, EKS Anywhere)
+
+- **Choose Calico** if:
+  - You prefer simplicity and fast installation
+  - You’re operating in constrained or legacy environments
+  - You rely on traditional iptables-based networking
+
+> **Cilium is becoming the default CNI for modern Kubernetes distributions**, especially in security-focused or large-scale cloud deployments.
